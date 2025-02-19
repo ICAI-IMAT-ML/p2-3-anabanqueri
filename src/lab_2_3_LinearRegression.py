@@ -92,7 +92,7 @@ class LinearRegressor:
         else:
             # TODO: Predict when X is more than one variable
             X = np.column_stack((np.ones(X.shape[0]), X))  
-            predictions = X @ np.concatenate(([self.intercept], self.coefficients))
+            predictions = X @ np.hstack(([self.intercept], self.coefficients))
         return predictions
 
 
@@ -199,7 +199,7 @@ def anscombe_quartet():
         results["RMSE"].append(evaluation_metrics["RMSE"])
         results["MAE"].append(evaluation_metrics["MAE"])
     
-    return results
+    return anscombe, datasets, models, results
 
 
 # Go to the notebook to visualize the results
