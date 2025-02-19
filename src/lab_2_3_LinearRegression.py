@@ -36,8 +36,15 @@ class LinearRegressor:
             X = X.reshape(1, -1)
 
         # TODO: Train linear regression model with only one coefficient
-        self.coefficients = None
-        self.intercept = None
+        X_mean = np.mean(X)
+        y_mean = np.mean(y)
+        
+        num = np.sum((X - X_mean) * (y - y_mean))
+        den = np.sum((X - X_mean) ** 2)
+        
+        self.coefficients = num / den
+        self.intercept = y_mean - self.coefficients * X_mean
+
 
     # This part of the model you will only need for the last part of the notebook
     def fit_multiple(self, X, y):
@@ -55,8 +62,11 @@ class LinearRegressor:
             None: Modifies the model's coefficients and intercept in-place.
         """
         # TODO: Train linear regression model with multiple coefficients
-        self.intercept = None
-        self.coefficients = None
+        X = np.column_stack((np.ones(X.shape[0]), X))
+        beta = np.linalg.inv(X.T @ X) @ X.T @ y
+        
+        self.intercept = beta[0]
+        self.coefficients = beta[1:]
 
     def predict(self, X):
         """
@@ -76,10 +86,11 @@ class LinearRegressor:
 
         if np.ndim(X) == 1:
             # TODO: Predict when X is only one variable
-            predictions = None
+            predictions = self.intercept + self.coefficients * X
         else:
             # TODO: Predict when X is more than one variable
-            predictions = None
+            X = np.column_stack((np.ones(X.shape[0]), X))  
+            predictions = X @ np.concatenate(([self.intercept], self.coefficients))
         return predictions
 
 
@@ -96,15 +107,17 @@ def evaluate_regression(y_true, y_pred):
     """
     # R^2 Score
     # TODO: Calculate R^2
-    r_squared = None
+    rss = np.sum((y_true - np.mean(y_true)) ** 2)
+    tss = np.sum((y_true - y_pred) ** 2)
+    r_squared = 1 - (rss / tss)
 
     # Root Mean Squared Error
     # TODO: Calculate RMSE
-    rmse = None
+    rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
 
     # Mean Absolute Error
     # TODO: Calculate MAE
-    mae = None
+    mae = np.mean(np.abs(y_true - y_pred))
 
     return {"R2": r_squared, "RMSE": rmse, "MAE": mae}
 
@@ -118,11 +131,11 @@ def sklearn_comparison(x, y, linreg):
 
     # Assuming your data is stored in x and y
     # TODO : Reshape x to be a 2D array, as scikit-learn expects 2D inputs for the features
-    x_reshaped = None
+    x_reshaped = x.reshape(-1, 1)
 
     # Create and train the scikit-learn model
     # TODO : Train the LinearRegression model
-    sklearn_model = None
+    sklearn_model = LinearRegression()
     sklearn_model.fit(x_reshaped, y)
 
     # Now, you can compare coefficients and intercepts between your model and scikit-learn's model
@@ -137,6 +150,7 @@ def sklearn_comparison(x, y, linreg):
         "sklearn_intercept": sklearn_model.intercept_,
     }
 
+
 def anscombe_quartet():
     # Load Anscombe's quartet
     # These four datasets are the same as in slide 19 of chapter 02-03: Linear and logistic regression
@@ -144,47 +158,45 @@ def anscombe_quartet():
 
     # Anscombe's quartet consists of four datasets
     # TODO: Construct an array that contains, for each entry, the identifier of each dataset
-    datasets = None
+    datasets = ["I", "II", "III", "IV"]
 
     models = {}
     results = {"R2": [], "RMSE": [], "MAE": []}
+    
     for dataset in datasets:
-
         # Filter the data for the current dataset
         # TODO
-        data = None
-
+        data = anscombe[anscombe["dataset"] == dataset]
+        
         # Create a linear regression model
         # TODO
-        model = None
+        model = LinearRegressor()
 
         # Fit the model
         # TODO
-        X = None  # Predictor, make it 1D for your custom model
-        y = None  # Response
+        X = data["x"].values
+        y = data["y"].values
         model.fit_simple(X, y)
 
         # Create predictions for dataset
         # TODO
-        y_pred = None
-
+        y_pred = model.predict(X)
+        
         # Store the model for later use
         models[dataset] = model
-
+        
         # Print coefficients for each dataset
-        print(
-            f"Dataset {dataset}: Coefficient: {model.coefficients}, Intercept: {model.intercept}"
-        )
-
+        print(f"Dataset {dataset}: Coefficient: {model.coefficients}, Intercept: {model.intercept}")
+        
         evaluation_metrics = evaluate_regression(y, y_pred)
 
         # Print evaluation metrics for each dataset
-        print(
-            f"R2: {evaluation_metrics['R2']}, RMSE: {evaluation_metrics['RMSE']}, MAE: {evaluation_metrics['MAE']}"
-        )
+        print(f"R2: {evaluation_metrics['R2']}, RMSE: {evaluation_metrics['RMSE']}, MAE: {evaluation_metrics['MAE']}")
+        
         results["R2"].append(evaluation_metrics["R2"])
         results["RMSE"].append(evaluation_metrics["RMSE"])
         results["MAE"].append(evaluation_metrics["MAE"])
+    
     return results
 
 
