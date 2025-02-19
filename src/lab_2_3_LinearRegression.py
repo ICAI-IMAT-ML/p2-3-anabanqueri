@@ -136,7 +136,7 @@ def sklearn_comparison(x, y, linreg):
     # Create and train the scikit-learn model
     # TODO : Train the LinearRegression model
     sklearn_model = LinearRegressor()
-    sklearn_model.fit(x_reshaped, y)
+    sklearn_model.fit_simple(x_reshaped, y)
 
     # Now, you can compare coefficients and intercepts between your model and scikit-learn's model
     print("Custom Model Coefficient:", linreg.coefficients)
